@@ -22,12 +22,25 @@ namespace _2048_MS_Graph
         private List<Tuple<Point, Point>> mouvementTuile = new List<Tuple<Point, Point>>();
         public Form1()
         {
-            InitializeComponent(); 
+            InitializeComponent();
             InitializeGame();  // démarre la partie
+            //Double buffering pour éviter que la tableau ne se redessine inutilement.
+            this.SetStyle(ControlStyles.DoubleBuffer |
+                 ControlStyles.UserPaint |
+                 ControlStyles.AllPaintingInWmPaint,
+                 true);
+            this.UpdateStyles();
+
+            // Activer le double buffering pour le panel
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty
+                | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.NonPublic,
+                null, panelJeu, new object[] { true });
 
             // Configuration du timer pour l'animation
             animationTimer = new Timer();
-            animationTimer.Interval = 256; 
+            animationTimer.Interval = 16; 
             animationTimer.Tick += AnimationTick;
             DepTuile = new Dictionary<Point, Point>();
             //utilisé pour le dessin de la grille et des tuiles dans le panel windows form. 
@@ -157,7 +170,7 @@ namespace _2048_MS_Graph
     private int DeplaceVers(int start, int end, int step)
           {
             // Réduire la valeur de 'step' pour ralentir l'animation
-            step = Math.Max(1, step / 20 ); 
+            step = Math.Max(1, step/100); 
 
             if (start < end)
                 return Math.Min(start + step, end);
@@ -182,11 +195,11 @@ namespace _2048_MS_Graph
                 {
                     if (board[i, j] == 2048)
                     {
-                        var result = MessageBox.Show("Félicitations! Vous avez atteint la tuile 2048. Voulez-vous continuer?",
+                        var continuer = MessageBox.Show("Félicitations! Vous avez atteint la tuile 2048. Voulez-vous continuer?",
                                               "Partie Gagnée",
                                               MessageBoxButtons.YesNo,
                                               MessageBoxIcon.Question);
-                        if (result == DialogResult.No)
+                        if (continuer == DialogResult.No)
                         {
                             // Code pour terminer le jeu 
                             this.Close(); // Pour fermer le formulaire
@@ -229,8 +242,20 @@ namespace _2048_MS_Graph
 
             // Si la partie est terminée
             MessageBox.Show("Game Over! Votre score: " + score, "Partie Terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            this.Close();
-            return true;
+            var recommencer = MessageBox.Show("Voulez-vous recommencer une nouvelle partie?",
+                                              "Nouvelle Partie",
+                                              MessageBoxButtons.YesNo,
+                                              MessageBoxIcon.Question);
+            if (recommencer == DialogResult.Yes)
+            {
+                InitializeGame();
+                return false; // La partie est réinitialisée, donc pas vraiment "finie"
+            }
+            else
+            {
+                this.Close(); // Ferme l'application
+                return true;
+            }
         }
 
         private void StartAnimation()
@@ -264,6 +289,16 @@ namespace _2048_MS_Graph
                 RandomTuile();
                 // Mettre à jour l'affichage après le mouvement
                 panelJeu.Invalidate();
+                if (PartieGagne())
+                {
+                    // L'utilisateur a choisi de ne pas continuer après avoir gagné
+                    this.Close();
+                }
+                else if (PartieFini())
+                {
+                    // La fonction PartieFini gère déjà la réinitialisation ou la fermeture
+                }
+
             }
         }
         private void RandomTuile()  // génération de tuile aléatoire
@@ -389,8 +424,6 @@ namespace _2048_MS_Graph
                 panelJeu.Invalidate();  // Met à jour la grille
                 MajScore(); // Met à jour l'affichage du score
                 StartAnimation(); // Démarre l'animation si des tuiles ont bougé
-                PartieFini();
-                PartieGagne();
             }
             return moved;
             }

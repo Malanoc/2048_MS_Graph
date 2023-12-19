@@ -1,0 +1,10 @@
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\bin\Debug\2048_MS_Graph.exe.config
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\bin\Debug\2048_MS_Graph.exe
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\bin\Debug\2048_MS_Graph.pdb
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\2048_MS_Graph.csproj.AssemblyReference.cache
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\_2048_MS_Graph.Form1.resources
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\_2048_MS_Graph.Properties.Resources.resources
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\2048_MS_Graph.csproj.GenerateResource.cache
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\2048_MS_Graph.csproj.CoreCompileInputs.cache
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\2048_MS_Graph.exe
+C:\Users\pd41qks\source\repos\2048_MS_Graph\2048_MS_Graph\obj\Debug\2048_MS_Graph.pdb

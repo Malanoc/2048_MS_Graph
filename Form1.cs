@@ -41,7 +41,7 @@ namespace _2048_MS_Graph
 
             // Configuration du timer pour l'animation
             animationTimer = new Timer();
-            animationTimer.Interval = 16; 
+            animationTimer.Interval = 32; 
             animationTimer.Tick += AnimationTick;
             DepTuile = new Dictionary<Point, Point>();
             //Utilisé pour le dessin de la grille et des tuiles dans le panel windows form. 
@@ -308,10 +308,8 @@ namespace _2048_MS_Graph
         {
             // Taille de chaque cellule de la grille
             int cellSize = 100; 
-
             // Police utilisée pour afficher les numéros dans les tuiles
             Font font = new Font("Arial", 20);
-
             // Parcourir le tableau 'board' pour dessiner chaque tuile
             for (int i = 0; i < board.GetLength(0); i++) // Parcours des lignes
             {
@@ -321,19 +319,14 @@ namespace _2048_MS_Graph
                     // 'ColorTuile' est une fonction qui renvoie une couleur spécifique pour chaque valeur de tuile
                     Color color = ColorTuile(board[i, j]);
                     Brush brush = new SolidBrush(color);
-
                     // Créer un rectangle représentant la tuile à la position (i, j)
                     Rectangle rect = new Rectangle(j * cellSize, i * cellSize, cellSize, cellSize);
-
                     // Remplir le rectangle avec la couleur déterminée
                     g.FillRectangle(brush, rect);
-
                     // Dessiner le contour du rectangle (la tuile) avec un stylo noir
                     g.DrawRectangle(Pens.Black, rect);
-
                     // Déterminer le texte à afficher dans la tuile (la valeur de la tuile, sauf si elle est 0)
                     string text = board[i, j] > 0 ? board[i, j].ToString() : "";
-
                     // Dessiner le texte au centre du rectangle avec la police et la couleur définies
                     g.DrawString(text, font, Brushes.Black, rect, new StringFormat
                     {
@@ -432,8 +425,8 @@ namespace _2048_MS_Graph
                 // Calculer la nouvelle position intermédiaire de la tuile.
                 // Utilise la fonction DeplaceVers pour déplacer la tuile d'un pas vers sa destination.
                 Point current = new Point(
-                    DeplaceVers(start.X, end.X, 1), // Déplacement horizontal.
-                    DeplaceVers(start.Y, end.Y, 1)); // Déplacement vertical.
+                    DeplaceVers(start.X, end.X, 100), // Déplacement horizontal.
+                    DeplaceVers(start.Y, end.Y, 100)); // Déplacement vertical.
 
                 // Vérifier si la tuile a atteint sa destination.
                 if (current == end)

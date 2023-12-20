@@ -188,30 +188,25 @@ namespace _2048_MS_Graph
                         }
                     }
                 }
-
                 // Vérifier s'il y a des cellules vides disponibles
                 if (caseVide.Count > 0)
                 {
                     Random random = new Random();
                     // Générer un index aléatoire parmi les cellules vides
                     int randomIndex = random.Next(caseVide.Count);
-
                     // Récupérer l'indice de la cellule sélectionnée aléatoirement
                     var cell = caseVide[randomIndex];
                     int row = cell.Item1;
                     int col = cell.Item2;
-
                     // Ajouter une nouvelle tuile (2 ou 4) à la cellule sélectionnée
                     board[row, col] = (random.Next(2) + 1) * 2; // Soit 2, soit 4
                 }
             }
-
         //DeplaceTuile est la fonction principale du jeu. Elle gère les mouvements des tuiles, leurs fusions et l'incréementation du score. 
         private  bool DeplaceTuile(int dh, int dv)
          {
             bool moved = false;
             mouvementTuile.Clear(); // Réinitialiser les mouvements de tuiles pour ce tour
-
 
             // Réinitialiser le tableau de fusion à chaque mouvement
             for (int i = 0; i < board.GetLength(0); i++)
@@ -221,14 +216,12 @@ namespace _2048_MS_Graph
                         fusionTuile[i, j] = false;
                     }
                 }
-
             // Déterminer la direction du mouvement
             int[] order = new int[4] { 0, 1, 2, 3 };
             if (dh == 1 || dv == 1)
             {
                 order = new int[4] { 3, 2, 1, 0 }; // Inverser l'ordre pour les mouvements vers la droite ou le bas
             }
-
             // Parcourir la grille
             for (int x = 0; x < board.GetLength(0); x++)
             {
@@ -272,11 +265,9 @@ namespace _2048_MS_Graph
                                 break;
                             }
                         }
-
                         nextI += dv;
                         nextJ += dh;
                     }
-
                     // Gérer le cas où la tuile se déplace vers une case vide en fin de grille
                     if (nextI < 0 || nextI >= 4 || nextJ < 0 || nextJ >= 4)
                     {
@@ -310,7 +301,7 @@ namespace _2048_MS_Graph
 
         /****************************************************************************************************************************************
                     Fonctions utilisées pour le dessin de la grille de jeu dans le Panel de notre Windows Forms. 
-       ****************************************************************************************************************************************/
+        ****************************************************************************************************************************************/
 
         //DrawGrid dessine de la grille du jeu.
         private void DrawGrid(Graphics g) 
@@ -478,8 +469,7 @@ namespace _2048_MS_Graph
             // La valeur de 'step' est réduite pour ralentir l'animation. En réduisant 'step', le mouvement de la tuile est plus lent.
             // 'step' détermine la distance que la tuile parcourt à chaque mise à jour de l'animation.
             // 'Math.Max' s'assure que 'step' ne descend pas en dessous de 1 pour éviter une stagnation.
-            step = Math.Max(1, step / 100);
-
+            step = Math.Max(1, step / 1000);
             // Si la position de départ (start) est inférieure à la position de fin (end),
             // cela signifie que la tuile doit se déplacer vers le haut ou vers la droite.
             if (start < end)

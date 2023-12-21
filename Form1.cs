@@ -20,17 +20,22 @@ namespace _2048_MS_Graph
         private Timer animationTimer;
         private Dictionary<Point, Point> DepTuile; // Pour gérer les animations 
         private List<Tuple<Point, Point>> mouvementTuile = new List<Tuple<Point, Point>>();
+        private Dictionary<Point, TuileAnimation> tuileAnimations = new Dictionary<Point, TuileAnimation>();
+        private bool aCliqueContinuer = false;
+        private class TuileAnimation
+          {
+            public Point Debut { get; set; }
+            public Point Fin { get; set; }
+            public Point Actuel { get; set; }
+            public float Progres { get; set; }
+            public int Valeur { get; set; }  
+          }
+
         public Form1()
         {
             InitializeComponent();
-            InitializeGame();  // démarre la partie
-
-            //Double buffering pour éviter que la tableau ne se redessine inutilement.
-            this.SetStyle(ControlStyles.DoubleBuffer |
-                 ControlStyles.UserPaint |
-                 ControlStyles.AllPaintingInWmPaint,
-                 true);
-            this.UpdateStyles();
+            // démarre la partie
+            InitialisePartie(); 
 
             // Activer le double buffering pour le panel
             typeof(Panel).InvokeMember("DoubleBuffered",
@@ -41,7 +46,7 @@ namespace _2048_MS_Graph
 
             // Configuration du timer pour l'animation
             animationTimer = new Timer();
-            animationTimer.Interval = 32;
+            animationTimer.Interval = 16;
             animationTimer.Tick += AnimationTick;
             DepTuile = new Dictionary<Point, Point>();
             //Utilisé pour le dessin de la grille et des tuiles dans le panel windows form. 
@@ -51,8 +56,10 @@ namespace _2048_MS_Graph
                                         Fonctions utilisées pour les mécaniques et logiques de jeu du 2048. 
         ****************************************************************************************************************************************/
 
-        //InitializeGame initialise la partie en mettant le score à 0 et en générant 2 tuiles aléatoire de valeur 2 ou 4.
-        private void InitializeGame()
+        /// <summary>
+        /// Initialise la partie en mettant le score à 0 et en générant 2 tuiles aléatoire de valeur 2 ou 4.
+        /// </summary>
+        private void InitialisePartie()
         {
             // Réinitialiser le score
             score = 0;
@@ -73,32 +80,49 @@ namespace _2048_MS_Graph
             panelJeu.Invalidate();
             MajScore();
         }
-        //PartieGagne gère la fin de partie dans le cas d'une victoire.
+        /// <summary>
+        /// Gère la fin de partie dans le cas d'une victoire.
+        /// </summary>
+        /// <returns></returns>
         private bool PartieGagne()
         {
-            for (int i = 0; i < board.GetLength(0); i++)
+            //Prend en compte que l'utilisateur a déjà atteint 2048 durant la partie et veut continuer à jouer.
+            if (!aCliqueContinuer)
             {
-                for (int j = 0; j < board.GetLength(1); j++)
+                //Recherche une tuile 2048 dans le board.
+                for (int i = 0; i < board.GetLength(0); i++)
                 {
-                    if (board[i, j] == 2048)
+                    for (int j = 0; j < board.GetLength(1); j++)
                     {
-                        var continuer = MessageBox.Show("Félicitations! Vous avez atteint la tuile 2048. Voulez-vous continuer?",
-                                              "Partie Gagnée",
-                                              MessageBoxButtons.YesNo,
-                                              MessageBoxIcon.Question);
-                        if (continuer == DialogResult.No)
+                        if (board[i, j] == 2048)
                         {
-                            // Code pour terminer le jeu 
-                            this.Close(); // Pour fermer le formulaire
-                            return true;
+                            //Boite de dialogue pour proposer à l'utilisateur de continuer la partie après avoir créé une tuile 2048.
+                            var continuer = MessageBox.Show("Félicitations! Vous avez atteint la tuile 2048. Voulez-vous continuer?",
+                                                "Partie Gagnée",
+                                                MessageBoxButtons.YesNo,
+                                                MessageBoxIcon.Question);
+                            if (continuer == DialogResult.No)
+                            {
+                                // Code pour terminer le jeu et fermer le programme.
+                                this.Close(); 
+                                return true;
+                            }
+                            //L'utilisateur continue à jouer après avoir vu la message box de victoire. 
+                            aCliqueContinuer = true;
+                            return false;
+
                         }
-                        return false; //l'utilisateur continue à jouer.
+
                     }
                 }
             }
+            //L'utilisateur continue à jouer.
             return false;
         }
-        //PartieFini gère la fin de partie dans le cas d'une défaite.
+        /// <summary>
+        /// Gère la fin de partie dans le cas d'une défaite.
+        /// </summary>
+        /// <returns></returns>
         private bool PartieFini()
         {
             // Vérifiez d'abord s'il y a des tuiles vides
@@ -134,44 +158,40 @@ namespace _2048_MS_Graph
                                               MessageBoxIcon.Question);
             if (recommencer == DialogResult.Yes)
             {
-                InitializeGame();
-                return false; // La partie est réinitialisée, donc pas vraiment "finie"
+                // La partie est réinitialisée, donc pas vraiment "finie"
+                InitialisePartie();               
+                return false;
             }
             else
             {
-                this.Close(); // Ferme l'application
+                // Ferme l'application
+                this.Close(); 
                 return true;
             }
         }
-        //OnKeyDown permet de gérer les mouvement à l'aide des flèches directionnelles. 
-        protected override void OnKeyDown(KeyEventArgs e)
+        /// <summary>
+        /// OnKeyDown permet de gérer les mouvement à l'aide des flèches directionnelles. 
+        /// </summary>
+        /// <param name="e">La touche qui a été appuyée</param>
+        protected override void OnKeyUp(KeyEventArgs e)
         {
-            base.OnKeyDown(e);
-            bool moved = false;
+            base.OnKeyUp(e);
+            bool aBouge = false;
+            //détermine dans quelle direction l'utilisateur veut bouger les tuiles en utilisant les touches directionnelles
+            if (e.KeyCode == Keys.Up) aBouge = DeplaceTuile(0, -1);
+            else if (e.KeyCode == Keys.Down) aBouge = DeplaceTuile(0, 1);
+            else if (e.KeyCode == Keys.Left) aBouge = DeplaceTuile(-1, 0);
+            else if (e.KeyCode == Keys.Right) aBouge = DeplaceTuile(1, 0);
 
-            if (e.KeyCode == Keys.Up) moved = DeplaceTuile(0, -1);
-            else if (e.KeyCode == Keys.Down) moved = DeplaceTuile(0, 1);
-            else if (e.KeyCode == Keys.Left) moved = DeplaceTuile(-1, 0);
-            else if (e.KeyCode == Keys.Right) moved = DeplaceTuile(1, 0);
-
-            if (moved)
+            if (aBouge)
             {
-                RandomTuile();
                 // Mettre à jour l'affichage après le mouvement
                 panelJeu.Invalidate();
-                if (PartieGagne())
-                {
-                    // L'utilisateur a choisi de ne pas continuer après avoir gagné
-                    this.Close();
-                }
-                else if (PartieFini())
-                {
-                    // La fonction PartieFini gère déjà la réinitialisation ou la fermeture
-                }
-
             }
         }
-        //RandomTuile s'occupe de la génération de tuile aléatoire
+        /// <summary>
+        /// Fonction qui s'occupe de la génération de tuile aléatoire
+        /// </summary>
         private void RandomTuile()
         {
             // Tableau pour stocker les indices des cellules vides dans la grille
@@ -195,17 +215,22 @@ namespace _2048_MS_Graph
                 // Générer un index aléatoire parmi les cellules vides
                 int randomIndex = random.Next(caseVide.Count);
                 // Récupérer l'indice de la cellule sélectionnée aléatoirement
-                var cell = caseVide[randomIndex];
-                int row = cell.Item1;
-                int col = cell.Item2;
+                var tuile = caseVide[randomIndex];
+                int ligne = tuile.Item1;
+                int colonne = tuile.Item2;
                 // Ajouter une nouvelle tuile (2 ou 4) à la cellule sélectionnée
-                board[row, col] = (random.Next(2) + 1) * 2; // Soit 2, soit 4
+                board[ligne, colonne] = (random.Next(2) + 1) * 2; // Soit 2, soit 4
             }
         }
-        //DeplaceTuile est la fonction principale du jeu. Elle gère les mouvements des tuiles, leurs fusions et l'incréementation du score. 
-        private bool DeplaceTuile(int dh, int dv)
+        /// <summary>
+        /// Fonction principale du jeu. Elle gère les mouvements des tuiles, leurs fusions et l'incréementation du score. 
+        /// </summary>
+        /// <param name="depHori">Déplacement horizontal</param>
+        /// <param name="depVerti">Déplacement vertical</param>
+        /// <returns></returns>
+        private bool DeplaceTuile(int depHori, int depVerti)
         {
-            bool moved = false;
+            bool bouge = false;
             mouvementTuile.Clear(); // Réinitialiser les mouvements de tuiles pour ce tour
 
             // Réinitialiser le tableau de fusion à chaque mouvement
@@ -217,24 +242,25 @@ namespace _2048_MS_Graph
                 }
             }
             // Déterminer la direction du mouvement
-            int[] order = new int[4] { 0, 1, 2, 3 };
-            if (dh == 1 || dv == 1)
+            int[] ordre = new int[4] { 0, 1, 2, 3 };
+            if (depHori == 1 || depVerti == 1)
             {
-                order = new int[4] { 3, 2, 1, 0 }; // Inverser l'ordre pour les mouvements vers la droite ou le bas
+                // Inverser l'ordre pour les mouvements vers la droite ou le bas
+                ordre = new int[4] { 3, 2, 1, 0 }; 
             }
             // Parcourir la grille
             for (int x = 0; x < board.GetLength(0); x++)
             {
                 for (int y = 0; y < board.GetLength(1); y++)
                 {
-                    int i = order[x];
-                    int j = order[y];
-
-                    if (board[i, j] == 0) continue; // Ignorer les cases vides
+                    int i = ordre[x];
+                    int j = ordre[y];
+                    // Ignorer les cases vides
+                    if (board[i, j] == 0) continue; 
 
                     // Trouver la prochaine position
-                    int nextI = i + dv;
-                    int nextJ = j + dh;
+                    int nextI = i + depVerti;
+                    int nextJ = j + depHori;
 
                     while (nextI >= 0 && nextI < 4 && nextJ >= 0 && nextJ < 4)
                     {
@@ -248,100 +274,128 @@ namespace _2048_MS_Graph
                                 score += board[nextI, nextJ];
                                 board[i, j] = 0;
                                 fusionTuile[nextI, nextJ] = true;
-                                moved = true;
+                                bouge = true;
                                 mouvementTuile.Add(new Tuple<Point, Point>(new Point(i, j), new Point(nextI, nextJ)));
                                 break;
                             }
                             else
                             {
                                 // Déplacer la tuile sans fusionner
-                                if (nextI - dv != i || nextJ - dh != j)
+                                if (nextI - depVerti != i || nextJ - depHori != j)
                                 {
-                                    board[nextI - dv, nextJ - dh] = board[i, j];
-                                    if (nextI - dv != i || nextJ - dh != j) board[i, j] = 0;
-                                    moved = true;
-                                    mouvementTuile.Add(new Tuple<Point, Point>(new Point(i, j), new Point(nextI - dv, nextJ - dh)));
+                                    board[nextI - depVerti, nextJ - depHori] = board[i, j];
+                                    if (nextI - depVerti != i || nextJ - depHori != j) board[i, j] = 0;
+                                    bouge = true;
+                                    mouvementTuile.Add(new Tuple<Point, Point>(new Point(i, j), new Point(nextI - depVerti, nextJ - depHori)));
                                 }
                                 break;
                             }
                         }
-                        nextI += dv;
-                        nextJ += dh;
+                        nextI += depVerti;
+                        nextJ += depHori;
                     }
                     // Gérer le cas où la tuile se déplace vers une case vide en fin de grille
                     if (nextI < 0 || nextI >= 4 || nextJ < 0 || nextJ >= 4)
                     {
-                        nextI -= dv;
-                        nextJ -= dh;
+                        nextI -= depVerti;
+                        nextJ -= depHori;
                         if (nextI != i || nextJ != j)
                         {
                             board[nextI, nextJ] = board[i, j];
                             board[i, j] = 0;
-                            moved = true;
+                            bouge = true;
                             mouvementTuile.Add(new Tuple<Point, Point>(new Point(i, j), new Point(nextI, nextJ)));
                         }
                     }
                 }
             }
-            if (moved)
+            if (bouge)
             {
-                panelJeu.Invalidate();  // Met à jour la grille
-                MajScore(); // Met à jour l'affichage du score
-                StartAnimation(); // Démarre l'animation si des tuiles ont bougé
+                // Met à jour la grille, le score et démarre l'animation si des tuiles ont bougé.
+                panelJeu.Invalidate();  
+                MajScore(); 
+                DebutAnimation(); 
             }
-            return moved;
+            return bouge;
         }
-        // MajScore permet de mettre à jour l'affichage du score
+        /// <summary>
+        /// Permet de mettre à jour l'affichage du score
+        /// </summary>
         private void MajScore()
         {
             lblScore.Text = $"2048 - Score: {score}";
         }
 
-
-
         /****************************************************************************************************************************************
                     Fonctions utilisées pour le dessin de la grille de jeu dans le Panel de notre Windows Forms. 
         ****************************************************************************************************************************************/
 
-        //DrawGrid dessine de la grille du jeu.
-        private void DrawGrid(Graphics g)
+        /// <summary>
+        /// DessineGrille dessine de la grille du jeu.
+        /// </summary>
+        /// <param name="g"></param>
+        private void DessineGrille(Graphics g)
         {
-            // Taille de chaque cellule de la grille
             int cellSize = 100;
-            // Police utilisée pour afficher les numéros dans les tuiles
             Font font = new Font("Arial", 20);
-            // Parcourir le tableau 'board' pour dessiner chaque tuile
-            for (int i = 0; i < board.GetLength(0); i++) // Parcours des lignes
+
+            // Dessinez d'abord toutes les tuiles statiques
+            for (int i = 0; i < board.GetLength(0); i++)
             {
-                for (int j = 0; j < board.GetLength(1); j++) // Parcours des colonnes
+                for (int j = 0; j < board.GetLength(1); j++)
                 {
-                    // Déterminer la couleur de fond de la tuile basée sur sa valeur
-                    // 'ColorTuile' est une fonction qui renvoie une couleur spécifique pour chaque valeur de tuile
-                    Color color = ColorTuile(board[i, j]);
-                    Brush brush = new SolidBrush(color);
-                    // Créer un rectangle représentant la tuile à la position (i, j)
-                    Rectangle rect = new Rectangle(j * cellSize, i * cellSize, cellSize, cellSize);
-                    // Remplir le rectangle avec la couleur déterminée
-                    g.FillRectangle(brush, rect);
-                    // Dessiner le contour du rectangle (la tuile) avec un stylo noir
-                    g.DrawRectangle(Pens.Black, rect);
-                    // Déterminer le texte à afficher dans la tuile (la valeur de la tuile, sauf si elle est 0)
-                    string text = board[i, j] > 0 ? board[i, j].ToString() : "";
-                    // Dessiner le texte au centre du rectangle avec la police et la couleur définies
-                    g.DrawString(text, font, Brushes.Black, rect, new StringFormat
+                    // Dessinez la tuile si elle n'est pas en cours d'animation
+                    if (!tuileAnimations.Any(a => a.Key.X == i && a.Key.Y == j))
                     {
-                        Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
-                    });
+                        DessineTuile(g, new Point(i, j), board[i, j], cellSize, font);
+                    }
                 }
             }
+            // Ensuite, dessinez les tuiles en animation par-dessus
+            foreach (var anim in tuileAnimations.Values)
+            {
+                DessineTuile(g, anim.Actuel, anim.Valeur, cellSize, font);
+            }
         }
-        // panelJeul_Paint intégre la fonction de dession de la grille dans le panel.
+        /// <summary>
+        /// Dessine les tuiles dans la grille.
+        /// </summary>
+        /// <param name="g"></param>
+        /// <param name="gridPosition"></param>
+        /// <param name="value"></param>
+        /// <param name="cellSize"></param>
+        /// <param name="font"></param>
+        private void DessineTuile(Graphics g, Point gridPosition, int value, int cellSize, Font font)
+        {
+            Point screenPosition = ConvertToScreenCoordinates(gridPosition.X, gridPosition.Y, cellSize);
+            Color color = ColorTuile(value);
+            Brush brush = new SolidBrush(color);
+            Rectangle rect = new Rectangle(screenPosition.X, screenPosition.Y, cellSize, cellSize);
+
+            g.FillRectangle(brush, rect);
+            g.DrawRectangle(Pens.Black, rect);
+
+            string text = value > 0 ? value.ToString() : "";
+            g.DrawString(text, font, Brushes.Black, rect, new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            });
+        }
+        /// <summary>
+        /// Intégre la fonction de dession de la grille dans le panel.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void panelJeu_Paint(object sender, PaintEventArgs e)
         {
-            DrawGrid(e.Graphics);
+            DessineGrille(e.Graphics);
         }
-        //ColorTuile assure la gestions des couleurs en fonction de la valeur de la tuile.
+        /// <summary>
+        /// Assure la gestions des couleurs en fonction de la valeur de la tuile.
+        /// </summary>
+        /// <param name="value">valeur de affichée sur la tuile</param>
+        /// <returns></returns>
         private Color ColorTuile(int value)
         {
             switch (value)
@@ -362,130 +416,106 @@ namespace _2048_MS_Graph
                 case 16384: return Color.IndianRed;
                 default: return Color.White;
             }
-        }
-        //StartAnimation initialise l'animation des tuiles à la suite d'un mouvement. 
-
-
+        }        
 
         /****************************************************************************************************************************************
                      Fonctions pour l'animation de la grille de jeu et les calculs de positions de tuiles utilisés pour l'anmiation. 
         ****************************************************************************************************************************************/
-
-        private void StartAnimation()
+        /// <summary>
+        /// Initialise l'animation des tuiles à la suite d'un mouvement. 
+        /// </summary>
+        private void DebutAnimation()
         {
-            // Vider le dictionnaire 'DepTuile' avant de commencer une nouvelle animation.
-            // 'DepTuile' contient les informations sur les tuiles en mouvement (leur position de départ et de fin).
-            DepTuile.Clear();
-
-            // Parcourir la liste 'mouvementTuile', qui contient les déplacements de tuiles à animer.
+            tuileAnimations.Clear();
             foreach (var movement in mouvementTuile)
             {
-                // 'start' est la position actuelle de la tuile, et 'end' est sa destination.
-                var start = movement.Item1; // Position de départ de la tuile.
-                var end = movement.Item2;   // Position de fin de la tuile.
+                var debut = movement.Item1;
+                var fin = movement.Item2;
+                int valeur = board[fin.X, fin.Y]; 
 
-                // Mémorise dans 'DepTuile' la destination de chaque tuile.
-                // La clé est la position de départ, et la valeur est la position de fin.
-                DepTuile[start] = end;
+                tuileAnimations.Add(debut, new TuileAnimation
+                {
+                    Debut = debut,
+                    Fin = fin,
+                    Actuel = debut,
+                    Progres = 0.0f,    
+                    Valeur= valeur   
+                });
             }
 
-            // Vérifier si le dictionnaire 'DepTuile' contient des tuiles à animer.
-            // Si c'est le cas, démarrer le timer qui gère l'animation.
-            if (DepTuile.Count > 0)
-            {
+            if (tuileAnimations.Any())
                 animationTimer.Start();
-            }
         }
-        //AnimationTick actionne le calcul de la position des Tuile grâce é MajDepTuile et redessine le tableau dans le Panel. 
+        /// <summary>
+        /// Actionne le calcul de la position des Tuile grâce é MajDepTuile et redessine le tableau dans le Panel. 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AnimationTick(object sender, EventArgs e)
         {
-            // Mise à jour de la position des tuiles en mouvement
-            MajDepTuile();
+            bool TouteTuileDepFin = true;
 
-            // Demander le redessinage du panel pour refléter les nouvelles positions des tuiles
-            panelJeu.Invalidate();
-        }
-        //MajDepTuile gère la mise à jour des positions des tuiles pendant l'animation.
-        private void MajDepTuile()
-        {
-            // Liste pour enregistrer les tuiles qui ont atteint leur destination finale.
-            List<Point> DepFini = new List<Point>();
-
-            // Dictionnaire temporaire pour conserver les nouvelles positions calculées des tuiles.
-            var nouvelPosi = new Dictionary<Point, Point>();
-
-            // Parcourir chaque paire de positions de départ et de fin dans DepTuile.
-            foreach (var item in DepTuile)
+            foreach (var anim in tuileAnimations)
             {
-                // 'start' est la position actuelle de la tuile.
-                Point start = item.Key;
-                // 'end' est la position finale souhaitée de la tuile.
-                Point end = item.Value;
-
-                // Calculer la nouvelle position intermédiaire de la tuile.
-                // Utilise la fonction DeplaceVers pour déplacer la tuile d'un pas vers sa destination.
-                Point current = new Point(
-                    DeplaceVers(start.X, end.X, 100), // Déplacement horizontal.
-                    DeplaceVers(start.Y, end.Y, 100)); // Déplacement vertical.
-
-                // Vérifier si la tuile a atteint sa destination.
-                if (current == end)
+                if (anim.Value.Progres < 1.0f)
                 {
-                    // Si la tuile est arrivée à destination, l'ajouter à la liste des déplacements terminés.
-                    DepFini.Add(start);
+                    anim.Value.Progres += 0.35f; // Ajustez ce taux pour modifier la vitesse de l'animation
+                    anim.Value.Actuel = LerpPosition(anim.Value.Debut, anim.Value.Fin, anim.Value.Progres);
+                    TouteTuileDepFin = false;
                 }
                 else
                 {
-                    // Si la tuile n'est pas encore arrivée, mettre à jour sa nouvelle position dans 'nouvelPosi'.
-                    nouvelPosi[start] = current;
+                    // Mettez à jour le tableau une fois l'animation terminée pour cette tuile
+                    board[anim.Value.Fin.X, anim.Value.Fin.Y] = anim.Value.Valeur;
+                    board[anim.Value.Debut.X, anim.Value.Debut.Y] = 0;
                 }
             }
-            // Mettre à jour les positions dans 'DepTuile' avec les nouvelles positions calculées.
-            foreach (var position in nouvelPosi)
-            {
-                DepTuile[position.Key] = position.Value;
-            }
-            // Supprimer les tuiles qui ont atteint leur destination du dictionnaire 'DepTuile'.
-            foreach (var Fini in DepFini)
-            {
-                DepTuile.Remove(Fini);
-            }
-            // Si toutes les tuiles ont atteint leur destination (aucun déplacement restant),arrêter le timer d'animation.
-            if (DepTuile.Count == 0)
+
+            panelJeu.Invalidate();
+
+            if (TouteTuileDepFin)
             {
                 animationTimer.Stop();
+                tuileAnimations.Clear();
+                RandomTuile();
+                PartieFini();
+                PartieGagne();
             }
         }
-        //DeplaceVers calcule la position intermédiaire d'une tuile en déplacement pour l'animation.
-        private int DeplaceVers(int start, int end, int step)
+        /// <summary>
+        /// Permet de calculer la position pour les tuiles en mouvement.
+        /// </summary>
+        /// <param name="debut"> valeur de début</param>
+        /// <param name="fin"> valeur de fin</param>
+        /// <param name="progres">valeur durant le déplacement.</param>
+        /// <returns></returns>
+        private int Lerp(int debut, int fin, float progres)
         {
-            // La valeur de 'step' est réduite pour ralentir l'animation. En réduisant 'step', le mouvement de la tuile est plus lent.
-            // 'step' détermine la distance que la tuile parcourt à chaque mise à jour de l'animation.
-            // 'Math.Max' s'assure que 'step' ne descend pas en dessous de 1 pour éviter une stagnation.
-            step = Math.Max(1, step / 1000);
-            // Si la position de départ (start) est inférieure à la position de fin (end),
-            // cela signifie que la tuile doit se déplacer vers le haut ou vers la droite.
-            if (start < end)
-            {
-                // 'Math.Min' est utilisé pour s'assurer que la tuile ne dépasse pas sa destination.
-                // La nouvelle position est la position actuelle plus 'step', mais pas plus que la position de fin.
-                return Math.Min(start + step, end);
-            }
-            // Si la position de départ est supérieure à la position de fin,
-            // cela signifie que la tuile doit se déplacer vers le bas ou vers la gauche.
-            else if (start > end)
-            {
-                // 'Math.Max' est utilisé pour s'assurer que la tuile ne recule pas au-delà de sa destination.
-                // La nouvelle position est la position actuelle moins 'step', mais pas moins que la position de fin.
-                return Math.Max(start - step, end);
-            }
-            // Si la position de départ est égale à la position de fin, cela signifie que la tuile est déjà à sa destination. 
-            // Dans ce cas, retourne simplement la position de fin.
-            else
-            {
-                return end;
-            }
+            return (int)(debut + (fin - debut) * progres);
         }
-
+        /// <summary>
+        /// Se base sur Lerp pour fournir un Point interpolé de X et Y durant le mouvement. 
+        /// </summary>
+        /// <param name="debut"></param>
+        /// <param name="fin"></param>
+        /// <param name="progres"></param>
+        /// <returns></returns>
+        private Point LerpPosition(Point debut, Point fin, float progres)
+        {
+            int x = Lerp(debut.X, fin.X, progres);
+            int y = Lerp(debut.Y, fin.Y, progres);
+            return new Point(x, y);
+        }
+        /// <summary>
+        /// Traduit les positions des tuiles en coordonnées de l'écran.
+        /// </summary>
+        /// <param name="ligne">ligne</param>
+        /// <param name="colonne">colonne</param>
+        /// <param name="TuileTaille">taille de tuile</param>
+        /// <returns></returns>
+        private Point ConvertToScreenCoordinates(int ligne, int colonne, int TuileTaille)
+        {
+            return new Point(colonne * TuileTaille, ligne * TuileTaille);
+        }
     }
 }

@@ -58,8 +58,10 @@
             // 
             this.btnHelp.BackColor = System.Drawing.Color.PeachPuff;
             this.btnHelp.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnHelp.FlatAppearance.BorderSize = 0;
+            this.btnHelp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnHelp.Image = global::_2048_MS_Graph.Properties.Resources.btn_info5050;
-            this.btnHelp.Location = new System.Drawing.Point(615, 42);
+            this.btnHelp.Location = new System.Drawing.Point(634, 52);
             this.btnHelp.Name = "btnHelp";
             this.btnHelp.Size = new System.Drawing.Size(55, 55);
             this.btnHelp.TabIndex = 10;
@@ -72,7 +74,8 @@
             // 
             this.btnRestart.BackColor = System.Drawing.Color.MistyRose;
             this.btnRestart.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnRestart.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnRestart.FlatAppearance.BorderSize = 0;
+            this.btnRestart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRestart.ForeColor = System.Drawing.SystemColors.ControlText;
             this.btnRestart.Location = new System.Drawing.Point(615, 139);
             this.btnRestart.Name = "btnRestart";

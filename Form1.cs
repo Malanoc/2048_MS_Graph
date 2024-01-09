@@ -442,6 +442,9 @@ namespace _2048_MS_Graph
                 case 4096: return Color.DarkOrchid;
                 case 8192: return Color.Chartreuse;
                 case 16384: return Color.IndianRed;
+                case 32768: return Color.Magenta;
+                case 65536: return Color.Azure;
+                case 131072: return Color.BlueViolet;
                 default: return Color.White;
             }
         }        
@@ -551,7 +554,7 @@ namespace _2048_MS_Graph
         ****************************************************************************************************************************************/
 
         /// <summary>
-        /// Bouton qui ouvre une message box expliquant à l'utilisateur comment jouer.
+        /// Bouton qui ouvre une message box expliquant à l'utilisateur comment jouer. (comme la touche I du clavier)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

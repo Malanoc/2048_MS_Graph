@@ -54,7 +54,7 @@ namespace _2048_MS_Graph
             panelJeu.Paint += new PaintEventHandler(panelJeu_Paint);
         }
         /****************************************************************************************************************************************
-                                        Fonctions utilisées pour les mécaniques et logiques de jeu du 2048. 
+                                        Fonctions utilisées pour les mécaniques et logiques de jeu 2048. 
         ****************************************************************************************************************************************/
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace _2048_MS_Graph
         /// <param name="font"></param>
         private void DessineTuile(Graphics g, Point gridPosition, int value, int cellSize, Font font)
         {
-            Point screenPosition = ConvertToScreenCoordinates(gridPosition.X, gridPosition.Y, cellSize);
+            Point screenPosition = ConvertCoordonneeEcran(gridPosition.X, gridPosition.Y, cellSize);
             Color color = ColorTuile(value);
             Brush brush = new SolidBrush(color);
             // Créez un rectangle pour la tuile
@@ -475,7 +475,7 @@ namespace _2048_MS_Graph
                 animationTimer.Start();
         }
         /// <summary>
-        /// Actionne le calcul de la position des Tuile grâce à LerpPosition et redessine le tableau dans le Panel. 
+        /// Actionne le calcul de la position des Tuile grâce à CoordoneePosCalc et redessine le tableau dans le Panel. 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -488,7 +488,7 @@ namespace _2048_MS_Graph
                 if (anim.Value.Progres < 1.0f)
                 {
                     anim.Value.Progres += 0.30f; // Ajustez ce taux pour modifier la vitesse de l'animation
-                    anim.Value.Actuel = LerpPosition(anim.Value.Debut, anim.Value.Fin, anim.Value.Progres);
+                    anim.Value.Actuel = CoordoneePosCalc(anim.Value.Debut, anim.Value.Fin, anim.Value.Progres);
                     TouteTuileDepFin = false;
                 }
                 else
@@ -517,21 +517,21 @@ namespace _2048_MS_Graph
         /// <param name="fin"> valeur de fin</param>
         /// <param name="progres">valeur durant le déplacement.</param>
         /// <returns></returns>
-        private int Lerp(int debut, int fin, float progres)
+        private int PosCalc(int debut, int fin, float progres)
         {
             return (int)(debut + (fin - debut) * progres);
         }
         /// <summary>
-        /// Se base sur Lerp pour fournir un Point interpolé de X et Y durant le mouvement. 
+        /// Se base sur PosCalc pour fournir un Point interpolé de X et Y durant le mouvement. 
         /// </summary>
         /// <param name="debut"></param>
         /// <param name="fin"></param>
         /// <param name="progres"></param>
         /// <returns></returns>
-        private Point LerpPosition(Point debut, Point fin, float progres)
+        private Point CoordoneePosCalc(Point debut, Point fin, float progres)
         {
-            int x = Lerp(debut.X, fin.X, progres);
-            int y = Lerp(debut.Y, fin.Y, progres);
+            int x = PosCalc(debut.X, fin.X, progres);
+            int y = PosCalc(debut.Y, fin.Y, progres);
             return new Point(x, y);
         }
         /// <summary>
@@ -541,25 +541,29 @@ namespace _2048_MS_Graph
         /// <param name="colonne">colonne</param>
         /// <param name="TuileTaille">taille de tuile</param>
         /// <returns></returns>
-        private Point ConvertToScreenCoordinates(int ligne, int colonne, int TuileTaille)
+        private Point ConvertCoordonneeEcran(int ligne, int colonne, int TuileTaille)
         {
             return new Point(colonne * TuileTaille, ligne * TuileTaille);
         }
-        /// <summary>
-        /// Bouton permettant à l'utilisateur de comprendre comment jouer.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+
         /****************************************************************************************************************************************
                                                 Boutons à coté de pannel 
         ****************************************************************************************************************************************/
 
-        //Bouton qui ouvre une message box expliquant à l'utilisateur comment jouer.
+        /// <summary>
+        /// Bouton qui ouvre une message box expliquant à l'utilisateur comment jouer.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("COMMENT JOUER : Utilisez les flèches du clavier pour déplacer les tuiles. Quand deux tuiles avec le même nombre se touchent, elles fusionnent !");
         }
-        //Bouton qui permet de recommencer volontairement la partie.
+        /// <summary>
+        /// Bouton qui permet de recommencer volontairement la partie.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnRestart_Click(object sender, EventArgs e)
         {
             var recommencer = MessageBox.Show("Voulez-vous recommencer une nouvelle partie?",

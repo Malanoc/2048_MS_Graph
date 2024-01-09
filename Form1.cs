@@ -550,11 +550,16 @@ namespace _2048_MS_Graph
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        /****************************************************************************************************************************************
+                                                Boutons à coté de pannel 
+        ****************************************************************************************************************************************/
+
+        //Bouton qui ouvre une message box expliquant à l'utilisateur comment jouer.
         private void btnHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("COMMENT JOUER : Utilisez les flèches du clavier pour déplacer les tuiles. Quand deux tuiles avec le même nombre se touchent, elles fusionnent !");
         }
-
+        //Bouton qui permet de recommencer volontairement la partie.
         private void btnRestart_Click(object sender, EventArgs e)
         {
             var recommencer = MessageBox.Show("Voulez-vous recommencer une nouvelle partie?",

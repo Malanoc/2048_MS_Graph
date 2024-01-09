@@ -35,7 +35,8 @@ namespace _2048_MS_Graph
         {
             InitializeComponent();
             // démarre la partie
-            InitialisePartie(); 
+            InitialisePartie();
+            this.KeyPreview = true;
 
             // Activer le double buffering pour le panel
             typeof(Panel).InvokeMember("DoubleBuffered",
@@ -159,6 +160,7 @@ namespace _2048_MS_Graph
             if (recommencer == DialogResult.Yes)
             {
                 // La partie est réinitialisée, donc pas vraiment "finie"
+                aCliqueContinuer = false;
                 InitialisePartie();               
                 return false;
             }
@@ -182,7 +184,9 @@ namespace _2048_MS_Graph
             else if (e.KeyCode == Keys.Down) aBouge = DeplaceTuile(0, 1);
             else if (e.KeyCode == Keys.Left) aBouge = DeplaceTuile(-1, 0);
             else if (e.KeyCode == Keys.Right) aBouge = DeplaceTuile(1, 0);
-
+            else if (e.KeyCode == Keys.C) this.Close();
+            else if (e.KeyCode == Keys.I) MessageBox.Show("Comment Jouer?\n" + "Utilisez les flèches du clavier pour déplacer les tuiles.\n"+
+                                                          "Quand deux tuiles avec le même nombre se touchent, elles fusionnent !");
             if (aBouge)
             {
                 // Mettre à jour l'affichage après le mouvement
@@ -202,7 +206,8 @@ namespace _2048_MS_Graph
             {
                 for (int j = 0; j < board.GetLength(1); j++)
                 {
-                    if (board[i, j] == 0) // Si la cellule est vide (contient la valeur 0)
+                    // Si la cellule est vide (contient la valeur 0)
+                    if (board[i, j] == 0) 
                     {
                         caseVide.Add(new Tuple<int, int>(i, j));
                     }
@@ -218,8 +223,19 @@ namespace _2048_MS_Graph
                 var tuile = caseVide[randomIndex];
                 int ligne = tuile.Item1;
                 int colonne = tuile.Item2;
-                // Ajouter une nouvelle tuile (2 ou 4) à la cellule sélectionnée
-                board[ligne, colonne] = (random.Next(2) + 1) * 2; // Soit 2, soit 4
+                // Générer un nombre aléatoire entre 0 et 9 pour décider si la tuile sera 2 ou 4
+                // Donne un nombre entre 0 et 9
+                int chance = random.Next(10);
+                // 10% de chances
+                if (chance == 0) 
+                {
+                    board[ligne, colonne] = 4;
+                }
+                // 90% de chances
+                else
+                {
+                    board[ligne, colonne] = 2;
+                }
             }
         }
         /// <summary>
@@ -370,11 +386,23 @@ namespace _2048_MS_Graph
             Point screenPosition = ConvertToScreenCoordinates(gridPosition.X, gridPosition.Y, cellSize);
             Color color = ColorTuile(value);
             Brush brush = new SolidBrush(color);
+            // Créez un rectangle pour la tuile
             Rectangle rect = new Rectangle(screenPosition.X, screenPosition.Y, cellSize, cellSize);
+            // Rayon des coins arrondis
+            int cornerRadius = 10;
+            // Utiliser GraphicsPath pour créer une forme avec des coins arrondis
+            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddArc(rect.X, rect.Y, cornerRadius, cornerRadius, 180, 90);
+            path.AddArc(rect.X + rect.Width - cornerRadius, rect.Y, cornerRadius, cornerRadius, 270, 90);
+            path.AddArc(rect.X + rect.Width - cornerRadius, rect.Y + rect.Height - cornerRadius, cornerRadius, cornerRadius, 0, 90);
+            path.AddArc(rect.X, rect.Y + rect.Height - cornerRadius, cornerRadius, cornerRadius, 90, 90);
+            path.CloseFigure();
+            // Dessinez la tuile avec des coins arrondis
+            g.FillPath(brush, path);
+            g.DrawPath(Pens.Black, path);
 
-            g.FillRectangle(brush, rect);
-            g.DrawRectangle(Pens.Black, rect);
 
+            // Dessinez le texte au centre de la tuile
             string text = value > 0 ? value.ToString() : "";
             g.DrawString(text, font, Brushes.Black, rect, new StringFormat
             {
@@ -447,7 +475,7 @@ namespace _2048_MS_Graph
                 animationTimer.Start();
         }
         /// <summary>
-        /// Actionne le calcul de la position des Tuile grâce é MajDepTuile et redessine le tableau dans le Panel. 
+        /// Actionne le calcul de la position des Tuile grâce à LerpPosition et redessine le tableau dans le Panel. 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -459,7 +487,7 @@ namespace _2048_MS_Graph
             {
                 if (anim.Value.Progres < 1.0f)
                 {
-                    anim.Value.Progres += 0.35f; // Ajustez ce taux pour modifier la vitesse de l'animation
+                    anim.Value.Progres += 0.30f; // Ajustez ce taux pour modifier la vitesse de l'animation
                     anim.Value.Actuel = LerpPosition(anim.Value.Debut, anim.Value.Fin, anim.Value.Progres);
                     TouteTuileDepFin = false;
                 }
@@ -516,6 +544,29 @@ namespace _2048_MS_Graph
         private Point ConvertToScreenCoordinates(int ligne, int colonne, int TuileTaille)
         {
             return new Point(colonne * TuileTaille, ligne * TuileTaille);
+        }
+        /// <summary>
+        /// Bouton permettant à l'utilisateur de comprendre comment jouer.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("COMMENT JOUER : Utilisez les flèches du clavier pour déplacer les tuiles. Quand deux tuiles avec le même nombre se touchent, elles fusionnent !");
+        }
+
+        private void btnRestart_Click(object sender, EventArgs e)
+        {
+            var recommencer = MessageBox.Show("Voulez-vous recommencer une nouvelle partie?",
+                                             "Nouvelle Partie",
+                                             MessageBoxButtons.YesNo,
+                                             MessageBoxIcon.Question);
+            if (recommencer == DialogResult.Yes)
+            {
+                // La partie est réinitialisée, donc pas vraiment "finie"
+                aCliqueContinuer = false;
+                InitialisePartie();
+            }
         }
     }
 }
